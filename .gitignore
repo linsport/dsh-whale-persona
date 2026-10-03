@@ -1,0 +1,21 @@
+# 安装时产生的备份文件
+*.bak
+*.bak-*
+cordis.patch.yml.bak-*
+
+# 依赖（本项目零依赖，装了也别提交）
+node_modules/
+package-lock.json
+pnpm-lock.yaml
+yarn.lock
+
+# 编辑器 / 系统
+.vscode/
+.idea/
+.DS_Store
+Thumbs.db
+desktop.ini
+
+# 本地测试产物
+_脚本测试*/
+_gencheck/
