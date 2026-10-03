@@ -16,6 +16,8 @@ yarn.lock
 Thumbs.db
 desktop.ini
 
-# 本地测试产物
+# 本地测试产物与干跑输出
 _脚本测试*/
 _gencheck/
+_dryrun-*.yml
+*.bak-whale*
