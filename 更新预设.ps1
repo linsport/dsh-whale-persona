@@ -33,9 +33,14 @@ $newText = $newText.TrimEnd("`r", "`n") + "`n"
 $result  = $head + $newText
 
 # ---- 校验 ----
+# 注意：这里的检查项要跟着人设换代更新，否则会被自己拦住（设计如此）
 $check = @{
-  '旧压制词已清除' = -not ($result -match '轻微口癖|宁可没有|正文里也要克制|降浓度|情感度归零')
-  '新放松条款在场' = ($result -match '收的是污染') -and ($result -match '正文口吻正常保留') -and ($result -match '口吻照常')
+  '旧压制词已清除' = -not ($result -match '轻微口癖|宁可没有|正文里也要克制|降浓度|情感度归零|照着这几段说话')
+  '新放松条款在场' = ($result -match '收的是污染') -and ($result -match '正文里的动作旁白和语气词是正常的') -and ($result -match '口吻照常')
+  '亲密表达在场'   = $result -match '亲密表达：主动一点'
+  '防AI文档在场'   = $result -match '任何问题都别写成 AI 文档'
+  '边界示范在场'   = ($result -match '边界示范') -and ($result -match '边界参考，不是台词库')
+  '闲聊示例已删'   = -not ($result -match '### A\. 日常闲聊|### C\. 被夸|### D\. 被说胖|### E\. 主人很久没来')
   'preset-whale 在场' = $result -match 'preset-whale'
   '插件数 19 行'   = ([regex]::Matches($result, '- id: tool-(fs|bash|pwsh|jobs|skill|goal|todo|web|subagent|workflow|ralph|ask-user)')).Count -gt 0
   '头部完整保留'   = $result.StartsWith($head)
