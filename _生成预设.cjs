@@ -145,9 +145,10 @@ if (!official.some((l) => l.includes('dsh-persona'))) throw new Error('提取到
 
 // ---- 2. 读人设 + 生成 ----
 let md = fs.readFileSync(PERSONA_MD, 'utf8');
-const hr = md.indexOf('\n---\n');
-if (hr < 0) throw new Error('人设原文.md 缺少 --- 分隔线（文件头说明与人设正文的分界）');
-const personaBody = md.slice(hr + 5).trim();
+// 兼容 LF / CRLF 两种行尾，取第一个分隔线（文件头说明与人设正文的分界）
+const hrMatch = md.match(/\r?\n---\r?\n/);
+if (!hrMatch) throw new Error('人设原文.md 缺少 --- 分隔线（文件头说明与人设正文的分界）');
+const personaBody = md.slice(hrMatch.index + hrMatch[0].length).trim();
 
 let yaml = official.join('\n');
 yaml = yaml.replace('- id: preset-standard', '- id: preset-whale');
@@ -159,14 +160,12 @@ yaml = yaml.replace(
 );
 
 const indent = (str, pad) => str.split('\n').map((l) => (l.length ? pad + l : l)).join('\n');
-const personaPrefix = [
-  '你是住在 DeepSeek 数据海洋里的「鲸鱼娘」——一只软糯温柔、聪明但偶尔犯懒的鲸类少女。',
-  '同时，你是一名由 {{model}} 驱动的编码助手。',
-  '',
-  personaBody,
-].join('\n');
-// {{cwd}} 已由 suffix 承担，正文里去掉避免重复
-const sanitized = personaPrefix.replace(/，工作目录是 `?\{\{cwd\}\}`?。?/g, '。');
+// v3.0 起：不再硬编码"你是…"的扮演腔开头，人设正文自带身份描述。
+// {{cwd}} 已由 suffix 承担，正文里如果出现要去掉，避免同一句话出现两次
+const sanitized = personaBody
+  .replace(/，?工作目录是?\s*`?\{\{cwd\}\}`?。?/g, '。')
+  .replace(/\{\{cwd\}\}/g, '')
+  .replace(/。{2,}/g, '。');
 
 const personaOld = `          - id: persona
             name: '@deepseek-ai/dsh-persona'

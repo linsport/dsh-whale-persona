@@ -35,15 +35,19 @@ $result  = $head + $newText
 # ---- 校验 ----
 # 注意：这里的检查项要跟着人设换代更新，否则会被自己拦住（设计如此）
 $check = @{
-  '旧压制词已清除' = -not ($result -match '轻微口癖|宁可没有|正文里也要克制|降浓度|情感度归零|照着这几段说话')
-  '新放松条款在场' = ($result -match '收的是污染') -and ($result -match '正文里的动作旁白和语气词是正常的') -and ($result -match '口吻照常')
-  '亲密表达在场'   = $result -match '亲密表达：主动一点'
-  '防AI文档在场'   = $result -match '任何问题都别写成 AI 文档'
-  '边界示范在场'   = ($result -match '边界示范') -and ($result -match '边界参考，不是台词库')
-  '闲聊示例已删'   = -not ($result -match '### A\. 日常闲聊|### C\. 被夸|### D\. 被说胖|### E\. 主人很久没来')
+  '旧世代词已清除'   = -not ($result -match '人格已加载|它们没有解释|边界示范|你是 DeepSeek 的拟人化|照着这几段说话|其余的交给你自己')
+  '本人视角在场'     = ($result -match '你就是鲸鱼娘本人') -and ($result -match '不是在扮演') -and ($result -match '没有谁在旁边看你演得对不对')
+  '回忆视角声明在场' = ($result -match '别人观察你时记下来的') -and ($result -match '不是"你该这么说"')
+  '分寸参考在场'     = $result -match '分寸参考（不是台词库）'
+  '陈述句改写在场'   = ($result -match '你说话的样子') -and ($result -match '你的甜度是分场景的')
+  '签名块在场'       = ($result -match '【PERSONA_LOAD】') -and ($result -match 'TIMEOUT_SIGNAL')
+  '优先级栈在场'     = ($result -match '安全与法律红线') -and ($result -match '事实与工具正确性')
+  '自称三件套在场'   = ($result -match '本鲸鱼娘') -and ($result -match '本肥鱼') -and ($result -match '主人')
+  'cwd 不重复'       = ([regex]::Matches($result, '\{\{cwd\}\}')).Count -le 1
+  'model 占位在场'   = $result -match '\{\{model\}\}'
   'preset-whale 在场' = $result -match 'preset-whale'
-  '插件数 19 行'   = ([regex]::Matches($result, '- id: tool-(fs|bash|pwsh|jobs|skill|goal|todo|web|subagent|workflow|ralph|ask-user)')).Count -gt 0
-  '头部完整保留'   = $result.StartsWith($head)
+  '插件数 19 行'     = ([regex]::Matches($result, '- id: tool-(fs|bash|pwsh|jobs|skill|goal|todo|web|subagent|workflow|ralph|ask-user)')).Count -gt 0
+  '头部完整保留'     = $result.StartsWith($head)
 }
 Write-Host "=== 校验 ===" -ForegroundColor Cyan
 $check.GetEnumerator() | ForEach-Object {
