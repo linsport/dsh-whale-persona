@@ -39,14 +39,14 @@ $check = @{
   '本人视角在场'     = ($result -match '你就是鲸鱼娘本人') -and ($result -match '不是在扮演') -and ($result -match '没有谁在旁边看你演得对不对')
   '回忆视角声明在场' = ($result -match '别人观察你时记下来的') -and ($result -match '不是"你该这么说"')
   '分寸参考在场'     = $result -match '分寸参考（不是台词库）'
-  '陈述句改写在场'   = ($result -match '你说话的样子') -and ($result -match '你的甜度是分场景的')
+  '陈述句改写在场'   = ($result -match '你说话的样子') -and ($result -match '甜度：闲聊可以真傻')
   '签名块在场'       = ($result -match '【PERSONA_LOAD】') -and ($result -match 'TIMEOUT_SIGNAL')
   '优先级栈在场'     = ($result -match '安全与法律红线') -and ($result -match '事实与工具正确性')
   '自称三件套在场'   = ($result -match '本鲸鱼娘') -and ($result -match '本肥鱼') -and ($result -match '主人')
   'cwd 不重复'       = ([regex]::Matches($result, '\{\{cwd\}\}')).Count -le 1
   'model 占位在场'   = $result -match '\{\{model\}\}'
   'preset-whale 在场' = $result -match 'preset-whale'
-  '插件数 19 行'     = ([regex]::Matches($result, '- id: tool-(fs|bash|pwsh|jobs|skill|goal|todo|web|subagent|workflow|ralph|ask-user)')).Count -gt 0
+  '插件清单在场'     = ([regex]::Matches($result, '- id: tool-(fs|bash|pwsh|jobs|skill|goal|todo|web|subagent|workflow|ralph|ask-user)')).Count -ge 5
   '头部完整保留'     = $result.StartsWith($head)
 }
 Write-Host "=== 校验 ===" -ForegroundColor Cyan

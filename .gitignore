@@ -21,3 +21,6 @@ _脚本测试*/
 _gencheck/
 _dryrun-*.yml
 *.bak-whale*
+
+# 过程中的草稿/笔记（不进公开仓库）
+_增补草稿.md

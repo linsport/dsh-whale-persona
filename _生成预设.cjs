@@ -201,7 +201,23 @@ fs.writeFileSync(
 );
 console.error('已写出 package.json');
 
-// ---- 3. 校验 ----
+// ---- 3. 兜底：确保 .ps1 带 UTF-8 BOM ----
+// 原因：Windows PowerShell 5.1 对「无 BOM 的 .ps1」会按系统 ANSI 码页（简中 = GBK）
+// 解码，脚本里的中文全变乱码，直接语法错误跑不起来。
+// 而不少编辑器（含某些 AI 写入工具）保存时会剥掉 BOM，所以这里每次生成时补一道。
+// 注：本目录在 git 里不启用 working-tree-encoding —— 实测 git 2.51 的 iconv
+// 不认 "UTF-8-BOM" 这个编码名，启用后 git add 会直接失败。
+const PS1_BOM = Buffer.from([0xef, 0xbb, 0xbf]);
+for (const name of fs.readdirSync(HERE)) {
+  if (!name.toLowerCase().endsWith('.ps1')) continue;
+  const p = path.join(HERE, name);
+  const buf = fs.readFileSync(p);
+  if (buf.subarray(0, 3).equals(PS1_BOM)) continue;
+  fs.writeFileSync(p, Buffer.concat([PS1_BOM, buf]));
+  console.error(`已为 ${name} 补回 UTF-8 BOM`);
+}
+
+// ---- 4. 校验 ----
 let yamlLib;
 try { yamlLib = require('js-yaml'); }
 catch { console.error('（跳过 YAML 校验：未找到 js-yaml，装到别的机器上属正常）'); process.exit(0); }

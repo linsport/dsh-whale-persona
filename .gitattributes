@@ -1,0 +1,30 @@
+# 本仓库的编码约定
+#
+# 为什么需要这个文件：
+#   Windows PowerShell 5.1 读取「无 BOM 的 .ps1」时，会按系统 ANSI 码页
+#   （简体中文环境 = GBK）解码。脚本里的中文全部变乱码 → 语法错误，跑不起来。
+#   而不少编辑器保存时会静默剥掉 BOM，所以需要在仓库层面把规矩写死。
+#
+# 注意：这里**不启用** working-tree-encoding=UTF-8-BOM。
+#   实测 git 2.51.1 的 iconv 不认这个编码名，启用后 git add 会直接报
+#   "failed to encode ... from UTF-8-BOM to UTF-8"。
+#   BOM 的补回由 _生成预设.cjs 在每次生成时自动完成（见该脚本第 3 步）。
+#
+# 文本文件统一 LF，二进制不外露。
+* text=auto eol=lf
+
+# PowerShell 脚本必须带 BOM，由生成脚本负责补回，git 侧只做标记不做转换。
+*.ps1 text eol=lf
+
+# 生成产物与文档
+*.yml  text eol=lf
+*.md   text eol=lf
+*.json text eol=lf
+*.cjs  text eol=lf
+
+# 图片等二进制
+*.png binary
+*.jpg binary
+*.gif binary
+*.ico binary
+*.svg text eol=lf
