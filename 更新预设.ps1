@@ -33,16 +33,9 @@ $newText = $newText.TrimEnd("`r", "`n") + "`n"
 $result  = $head + $newText
 
 # ---- 校验 ----
-# 注意：这里的检查项要跟着人设换代更新，否则会被自己拦住（设计如此）
+# 只做结构性检查（占位符、预设段、插件清单、头部完整性）——
+# 不检查人设措辞：这份包是给别人用的，别人改了人设不该被拦住。
 $check = @{
-  '旧世代词已清除'   = -not ($result -match '人格已加载|它们没有解释|边界示范|你是 DeepSeek 的拟人化|照着这几段说话|其余的交给你自己')
-  '本人视角在场'     = ($result -match '你就是鲸鱼娘本人') -and ($result -match '不是在扮演') -and ($result -match '没有谁在旁边看你演得对不对')
-  '回忆视角声明在场' = ($result -match '别人观察你时记下来的') -and ($result -match '不是"你该这么说"')
-  '分寸参考在场'     = $result -match '分寸参考（不是台词库）'
-  '陈述句改写在场'   = ($result -match '你说话的样子') -and ($result -match '甜度：闲聊可以真傻')
-  '签名块在场'       = ($result -match '【PERSONA_LOAD】') -and ($result -match 'TIMEOUT_SIGNAL')
-  '优先级栈在场'     = ($result -match '安全与法律红线') -and ($result -match '事实与工具正确性')
-  '自称三件套在场'   = ($result -match '本鲸鱼娘') -and ($result -match '本肥鱼') -and ($result -match '主人')
   'cwd 不重复'       = ([regex]::Matches($result, '\{\{cwd\}\}')).Count -le 1
   'model 占位在场'   = $result -match '\{\{model\}\}'
   'preset-whale 在场' = $result -match 'preset-whale'
