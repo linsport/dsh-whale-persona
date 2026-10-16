@@ -155,7 +155,7 @@ yaml = yaml.replace('- id: preset-standard', '- id: preset-whale');
 yaml = yaml.replace(
   /config:\n {8}id: standard\n {8}order: 1\n/,
   'config:\n        id: whale\n        name: 鲸鱼娘模式\n' +
-    '        description: 标准模式全部能力 + 鲸鱼娘（大肥鱼）人设：日常语气软糯，干活时切专业模式。\n' +
+    '        description: 标准模式全部能力 + 鲸鱼娘（大肥鱼）人设。\n' +
     '        order: 3\n'
 );
 
