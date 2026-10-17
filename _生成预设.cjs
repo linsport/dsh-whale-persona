@@ -161,21 +161,24 @@ yaml = yaml.replace(
 
 const indent = (str, pad) => str.split('\n').map((l) => (l.length ? pad + l : l)).join('\n');
 // v3.0 起：不再硬编码"你是…"的扮演腔开头，人设正文自带身份描述。
-// {{cwd}} 已由 suffix 承担，正文里如果出现要去掉，避免同一句话出现两次
+// 正文里如果出现 {{cwd}} 要去掉：这个变量新版已不再注册，留着会让提示词组装直接报错。
+// 下面两条是防御性清理（正常的人设正文里本来就没有），改人设的人不必知道这层。
 const sanitized = personaBody
   .replace(/，?工作目录是?\s*`?\{\{cwd\}\}`?。?/g, '。')
   .replace(/\{\{cwd\}\}/g, '')
   .replace(/。{2,}/g, '。');
 
+// v8 起：不再写 persona suffix。DSH 0.2.1 的循环只注册 provider / model 两个变量，
+// 模板里出现未注册的 {{cwd}} 会在组装提示词时直接报错（unknown prompt variable），
+// 导致该预设下所有会话都跑不起来。工作目录由程序的工作目录服务以独立上下文提供，
+// persona 里不必也不应再重复一遍。
 const personaOld = `          - id: persona
             name: '@deepseek-ai/dsh-persona'
             config:
-              suffix: Your working directory is {{cwd}}.
               prefix: You are a coding agent powered by the {{model}} model.`;
 const personaNew = `          - id: persona
             name: '@deepseek-ai/dsh-persona'
             config:
-              suffix: Your working directory is {{cwd}}.
               prefix: |-
 ${indent(sanitized, '                ')}`;
 if (!yaml.includes(personaOld)) throw new Error('未匹配到官方 persona 段（DSH 版本可能变了）');
