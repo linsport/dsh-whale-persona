@@ -147,6 +147,28 @@ TUI / headless 同理。这样不修改 profile，重启后丢参数即恢复。
 | 桌面客户端 | `~/.dsh/profiles/desktop/cordis.patch.yml` |
 | `dsh web` | `~/.dsh/profiles/web/cordis.patch.yml` |
 
+### DSH 升级后，这个预设下所有会话都起不来
+
+现象：选「鲸鱼娘模式」新建会话，一个请求都发不出去，报错里写着提示词组装失败、已注册变量只有 `provider`、`model` 之类。
+
+原因不在人设，在 persona 段里那一行 `suffix`：
+
+```yaml
+- id: persona
+  config:
+    suffix: Your working directory is {{cwd}}.    # ← 就是这行
+```
+
+`{{cwd}}` 这个变量**新版 DSH 已经不注册了**，模板里只要出现它，组装提示词时就会直接中断，任何请求都到不了模型。程序文档原话：
+
+> Custom persona templates must not depend on a built-in `{{cwd}}` variable: the loop does not register it, so unresolved references fail prompt assembly before any model request.
+
+**修法**：整行删掉，或者直接用本仓库最新版的 `cordis.patch.yml`。工作目录信息不会丢 —— 那是「工作目录服务」独立提供的，不用在 persona 里再说一遍。
+
+> 自己改过 `_生成预设.cjs` 的话注意：里面有两个模板串（`personaOld` / `personaNew`）都带着这行，只删一个的话，下次重新生成又会带回来。
+
+**顺带一提**，DSH 升级常常还会改插件清单。本仓库的 `cordis.patch.yml` 是从你本机 `app.asar` 里的官方 `standard` 预设派生的，所以 DSH 一升级，就该重跑一次 `node _生成预设.cjs` 把它对齐。跑完拿 `git diff` 扫一眼新加的、删掉的插件是不是都合理。
+
 ### 选完之后没变化
 
 - 预设**只能在会话还是空白时切换**，已经聊过的会话锁定了，换不了
