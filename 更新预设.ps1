@@ -25,19 +25,30 @@ $idx = $profileText.IndexOf($Marker)
 if ($idx -lt 0) { throw "profile 里找不到 '$Marker'，无法定位要替换的段" }
 if ($profileText.IndexOf($Marker, $idx + 1) -ge 0) { throw "profile 里出现多个 '$Marker'，请人工确认" }
 
-$head = $profileText.Substring(0, $idx)
-$old  = $profileText.Substring($idx)
+# ---- 只替换鲸鱼段自己那几个顶层条目，后面的原样接回去 ----
+# profile 是 YAML 列表，每个顶层条目都从第 0 列的 "- " 起。
+# 旧版从标记一路替换到文件结尾，会把排在鲸鱼段之后的配置（如 mnemon-strategy-*）一起删掉。
+$itemRe   = [regex]'(?m)^- '
+$rest     = $profileText.Substring($idx)
+$oldItems = $itemRe.Matches($rest)
+$newItems = $itemRe.Matches($newText)
+if ($oldItems.Count -lt 1) { throw "从 '$Marker' 往下找不到顶层条目（第 0 列的 '- '）" }
+if ($newItems.Count -lt 1) { throw "新 yml 里没有顶层条目（第 0 列的 '- '），疑似文件损坏" }
 
-# ---- 拼新内容：头部原样 + 新 yml（确保以换行结尾，不多不少）----
+$head      = $profileText.Substring(0, $idx)
+$tailStart = if ($oldItems.Count -gt $newItems.Count) { $idx + $oldItems[$newItems.Count].Index } else { $profileText.Length }
+$tail      = $profileText.Substring($tailStart)
+
+# ---- 拼新内容：头部 + 新 yml + 尾部原样（确保新段以换行结尾，不多不少）----
 $newText = $newText.TrimEnd("`r", "`n") + "`n"
-$result  = $head + $newText
+$result  = $head + $newText + $tail
 
 # ---- 校验 ----
 # 只做结构性检查（cwd 占位、预设段、插件清单、头部完整性）——
 # 不检查人设措辞和 {{model}}：这份包是给别人用的，别人改人设不该被拦住；
 # 正文里要不要提模型名属人设取舍，不是结构问题。
 $check = @{
-  'cwd 不重复'       = ([regex]::Matches($result, '\{\{cwd\}\}')).Count -le 1
+  '尾部原样保留'     = ($tail -eq '') -or $result.EndsWith($tail)
   'preset-whale 在场' = $result -match 'preset-whale'
   '插件清单在场'     = ([regex]::Matches($result, '- id: tool-(fs|bash|pwsh|jobs|skill|goal|todo|web|subagent|workflow|ralph|ask-user)')).Count -ge 5
   '头部完整保留'     = $result.StartsWith($head)
@@ -53,6 +64,8 @@ Write-Host ""
 Write-Host ("原 profile : {0} 字符" -f $profileText.Length)
 Write-Host ("新 profile : {0} 字符" -f $result.Length)
 Write-Host ("鲸鱼段起点 : 偏移 {0}（第 {1} 行）" -f $idx, (($profileText.Substring(0,$idx) -split "`n").Count))
+$tailLines = if ($tail -eq '') { 0 } else { ($tail.TrimEnd("`r","`n") -split "`n").Count }
+Write-Host ("鲸鱼段终点 : 偏移 {0}（后面原样保留 {1} 行）" -f $tailStart, $tailLines)
 
 if (-not $Apply) {
   $dry = Join-Path $Here '_dryrun-profile.yml'
