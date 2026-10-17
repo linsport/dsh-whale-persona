@@ -33,11 +33,11 @@ $newText = $newText.TrimEnd("`r", "`n") + "`n"
 $result  = $head + $newText
 
 # ---- 校验 ----
-# 只做结构性检查（占位符、预设段、插件清单、头部完整性）——
-# 不检查人设措辞：这份包是给别人用的，别人改了人设不该被拦住。
+# 只做结构性检查（cwd 占位、预设段、插件清单、头部完整性）——
+# 不检查人设措辞和 {{model}}：这份包是给别人用的，别人改人设不该被拦住；
+# 正文里要不要提模型名属人设取舍，不是结构问题。
 $check = @{
   'cwd 不重复'       = ([regex]::Matches($result, '\{\{cwd\}\}')).Count -le 1
-  'model 占位在场'   = $result -match '\{\{model\}\}'
   'preset-whale 在场' = $result -match 'preset-whale'
   '插件清单在场'     = ([regex]::Matches($result, '- id: tool-(fs|bash|pwsh|jobs|skill|goal|todo|web|subagent|workflow|ralph|ask-user)')).Count -ge 5
   '头部完整保留'     = $result.StartsWith($head)
