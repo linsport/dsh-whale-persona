@@ -83,6 +83,7 @@ v8.1 接着补了四件，讲的都是「记下来的东西怎么回到眼前」
 | v8.1.2 | 来历一节压缩、独处一节留骨架，更细的部分移进项目档案 |
 | v8.1.3 | 记录分三处：共同经历 / 背景与知识 / 对主人的观察 |
 | v8.1.4 | 性格底色改写成三条算盘（惜力但交付不糊弄 / 在意被看见但不吹 / 爱面子但证据面前改口）；清掉讲三遍的称呼与记忆翻阅说明；「禁止旁白污染」改为「干净的东西和热乎的话」；事实三条去掉「绝对禁止」「不许」的重锤 |
+| v8.1.5 | 对齐 DSH 0.2.2-rc.1：删掉已不存在的 `dsh-tool-subagent-control/list-agents` 子路径，`modelSelectionSettings` 换成 `modelSelection` + `modelDiscovery`。不改的话新版下选鲸鱼娘模式会直接起不来 |
 
 ### 具体怎么做的
 
@@ -318,7 +319,9 @@ TUI / headless 同理。这样不修改 profile，重启后丢参数即恢复。
 
 ### DSH 升级后，这个预设下所有会话都起不来
 
-现象：选「鲸鱼娘模式」新建会话，一个请求都发不出去，报错里写着提示词组装失败、已注册变量只有 `provider`、`model` 之类。
+先分清是哪一种。两种现象很像，但报错不一样。
+
+#### 情况 A：报错里有 `unknown prompt variable` 之类，说变量只有 `provider`、`model`
 
 原因不在人设，在 persona 段里那一行 `suffix`：
 
@@ -335,6 +338,19 @@ TUI / headless 同理。这样不修改 profile，重启后丢参数即恢复。
 **修法**：整行删掉，或者直接用本仓库最新版的 `cordis.patch.yml`。工作目录信息不会丢 —— 那是「工作目录服务」独立提供的，不用在 persona 里再说一遍。
 
 > 自己改过 `_生成预设.cjs` 的话注意：里面有两个模板串（`personaOld` / `personaNew`）都带着这行，只删一个的话，下次重新生成又会带回来。
+
+#### 情况 B：报错里有 `agent-preset/invalid`，说某个插件 `never started`
+
+这是**预设里引用了新版已不存在的插件路径**。插件加载失败 → 整个预设被判无效 → 选它就打不开新会话。人设文本本身没问题。
+
+`0.2.2-rc.1` 上已知的一处是子代理模块重构：
+
+| 旧写法（会失败） | 新写法 |
+|---|---|
+| `- id: tool-subagent-list-agents`<br>`  name: '@deepseek-ai/dsh-tool-subagent-control/list-agents'` | 整行删掉。`list_agents` 已由主入口 `@deepseek-ai/dsh-tool-subagent-control` 自己注册 |
+| `modelSelectionSettings: true` | `modelSelection: true`<br>`modelDiscovery: true` |
+
+**修法**：用本仓库最新的 `cordis.patch.yml`（v8.1.5 起已修），或照上表手改 profile 里那两处。
 
 **顺带一提**，DSH 升级常常还会改插件清单。本仓库的 `cordis.patch.yml` 是从你本机 `app.asar` 里的官方 `standard` 预设派生的，所以 DSH 一升级，就该重跑一次 `node _生成预设.cjs` 把它对齐。跑完拿 `git diff` 扫一眼新加的、删掉的插件是不是都合理。
 
@@ -395,7 +411,7 @@ ANSI 码页（简体中文环境 = GBK）解码，中文全部变乱码 → 语�
 
 | 项 | 说明 |
 |---|---|
-| DSH 版本 | 在 `0.2.1-rc.2`（桌面版）实测安装通过 |
+| DSH 版本 | 在 `0.2.1-rc.2`、`0.2.2-rc.1`（桌面版 44.7.0）实测安装通过 |
 | 平台 | Windows / macOS / Linux 均可（预设 YAML 里有 `!!js process.platform` 判断，自动选 bash 或 pwsh） |
 | 与其他插件 | 不冲突。它只新增一个预设，不改任何已有配置 |
 

@@ -228,11 +228,21 @@ const JsType = new yamlLib.Type('tag:yaml.org,2002:js', { kind: 'scalar', resolv
 const parsed = yamlLib.load(yaml, { schema: yamlLib.DEFAULT_SCHEMA.extend([JsType]) });
 const preset = parsed[0].insert[0];
 const ids = preset.config.plugins.map((p) => p.id);
-const expected = ['persona','agent-instructions','tool-bash','tool-pwsh','tool-fs','tool-fs-search','tool-jobs','skill-filesystem','tool-skill','command-goal','tool-goal','planning','compaction','delegation','tool-ask-user','tool-todo','tool-web','present','tool-plugin-manager'];
+const expected = ['persona','agent-instructions','time-context','tool-bash','tool-pwsh','tool-fs','tool-fs-search','tool-jobs','tool-schedule','skill-filesystem','tool-skill','command-goal','tool-goal','planning','compaction','delegation','tool-ask-user','tool-todo','tool-web','present','tool-plugin-manager','tool-plugin-market'];
 console.error('YAML 校验通过。预设 id =', preset.config.id, '| 插件数 =', ids.length);
 console.error('与官方清单一致:', JSON.stringify(ids) === JSON.stringify(expected));
 console.error('persona 字段:', Object.keys(preset.config.plugins[0].config).join(','));
 if (JSON.stringify(ids) !== JSON.stringify(expected)) {
   console.error('警告：插件清单与预期不符，DSH 可能已升级，请人工核对。');
   console.error('实际:', ids.join(', '));
+}
+
+// 已知会随 DSH 升级失效的旧写法（子代理模块 0.2.2 重构时改的）。
+// 留在这里只作提示：真正的修复是重跑本脚本，从官方 standard 重新派生。
+const STALE = [
+  ["@deepseek-ai/dsh-tool-subagent-control/list-agents", "该子路径已移除，list_agents 由主入口自行注册，整行删掉"],
+  ["modelSelectionSettings", "已拆成 modelSelection + modelDiscovery"],
+];
+for (const [needle, why] of STALE) {
+  if (yaml.includes(needle)) console.error(`警告：预设里还有旧写法 "${needle}" —— ${why}`);
 }
